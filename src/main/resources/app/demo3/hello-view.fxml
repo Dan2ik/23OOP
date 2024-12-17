@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TableView?>
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="app.demo3.HelloController">
+    <!-- Верхняя панель для настройки параметров -->
+    <top>
+        <VBox spacing="10.0" alignment="CENTER">
+            <Label text="Настройки модели" />
+            <HBox spacing="10.0" alignment="CENTER">
+                <Label text="Число предприятий (N):" />
+                <TextField fx:id="numEnterprisesField" promptText="Введите значение..." />
+
+                <Label text="Число автомобилей (K):" />
+                <TextField fx:id="numCarsField" promptText="Введите значение..." />
+
+                <Label text="Денежный фонд (у.е.):" />
+                <TextField fx:id="fundField" promptText="Введите значение..." />
+            </HBox>
+
+            <HBox spacing="10.0" alignment="CENTER">
+                <Label text="Погодные условия:" />
+                <CheckBox fx:id="rainCheckBox" text="Дождь" />
+                <CheckBox fx:id="windCheckBox" text="Ветер" />
+
+                <Label text="Шаг моделирования (дней):" />
+                <TextField fx:id="stepField" promptText="Введите значение..." />
+            </HBox>
+
+            <Button text="Запустить моделирование" onAction="#onHelloButtonClick" />
+        </VBox>
+    </top>
+
+    <!-- Центральная часть: карта города и информация о состоянии -->
+    <center>
+        <SplitPane orientation="VERTICAL">
+            <!-- Карта города -->
+            <AnchorPane fx:id="cityMapPane" prefHeight="300.0" style="-fx-border-color: black;">
+                <Label text="Карта города" layoutX="10.0" layoutY="10.0" />
+            </AnchorPane>
+
+            <!-- Таблицы с данными -->
+            <TabPane>
+                <Tab text="Состояние предприятий">
+                    <TableView fx:id="enterpriseTable">
+                        <columns>
+                            <TableColumn text="Предприятие" fx:id="enterpriseNameColumn" />
+                            <TableColumn text="Выбросы (т)" fx:id="emissionsColumn" />
+                            <TableColumn text="Допустимые выбросы (т)" fx:id="limitColumn" />
+                            <TableColumn text="Штрафы (у.е.)" fx:id="penaltyColumn" />
+                            <TableColumn text="Субсидии (у.е.)" fx:id="subsidyColumn" />
+                        </columns>
+                    </TableView>
+                </Tab>
+
+                <Tab text="Состояние автомобилей">
+                    <TableView fx:id="carsTable">
+                        <columns>
+                            <TableColumn text="День" fx:id="dayColumn" />
+                            <TableColumn text="Допущено автомобилей" fx:id="allowedCarsColumn" />
+                            <TableColumn text="Суммарные выхлопы (т)" fx:id="totalExhaustColumn" />
+                        </columns>
+                    </TableView>
+                </Tab>
+
+                <Tab text="Принятые меры">
+                    <TableView fx:id="actionsTable">
+                        <columns>
+                            <TableColumn text="Дата" fx:id="dateColumn" />
+                            <TableColumn text="Мера" fx:id="actionTypeColumn" />
+                            <TableColumn text="Описание" fx:id="actionDescriptionColumn" />
+                        </columns>
+                    </TableView>
+                </Tab>
+            </TabPane>
+        </SplitPane>
+    </center>
+</BorderPane>
