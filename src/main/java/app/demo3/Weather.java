@@ -10,6 +10,7 @@ public class Weather {
     }
 
     public double getDispersionFactor() {
-        return 1 + windStrength + (rain ? 0.5 : 0); // Чем больше, тем быстрее рассеиваются выбросы
+        // Чем выше сила ветра и дождь, тем быстрее рассасываются загрязняющие вещества
+        return 1 + windStrength + (rain ? 0.5 : 0);
     }
 }

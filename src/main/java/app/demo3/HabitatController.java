@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-public class Habitat {
+public class HabitatController {
     @FXML
     private TextField numEnterprisesField;
     @FXML
@@ -110,6 +110,12 @@ public class Habitat {
             if (isRaining) totalEmissions *= 0.9; // Дождь уменьшает выбросы на 10%
             if (isWindy) totalEmissions *= 0.85; // Ветер уменьшает выбросы на 15%
 
+            // Применяем штрафные санкции к предприятиям, превышающим допустимые выбросы
+            applyFines();
+
+            // Ограничение движения автомобилей (четные/нечетные дни)
+            regulateVehicleTraffic(day);
+
             // Обновляем карту загрязнения
             updatePollutionMap(totalEmissions);
 
@@ -124,5 +130,29 @@ public class Habitat {
         Circle pollutionCloud = new Circle(250, 200, totalEmissions / 10, Color.rgb(255, 0, 0, 0.3));
         pollutionCloud.setEffect(new GaussianBlur(20));
         cityMapPane.getChildren().add(pollutionCloud);
+    }
+
+    // Метод для применения штрафных санкций к предприятиям
+    private void applyFines() {
+        for (Enterprise e : enterprises) {
+            double emissions = e.calculateEmissions();
+            if (emissions > e.getAllowedEmissions()) {
+                double fine = emissions * 0.1; // Штраф в 10% от выбросов
+                cityFund += fine; // Добавляем штраф в городской фонд
+                System.out.println("Fine applied to " + e.getName() + ": " + fine);
+            }
+        }
+    }
+
+    // Метод для регулирования движения автомобилей по дням
+    private void regulateVehicleTraffic(int day) {
+        boolean isEvenDay = (day % 2 == 0);
+        for (Vehicle v : vehicles) {
+            boolean canMove = isEvenDay ? Integer.parseInt(v.getName().split(" ")[1]) % 2 == 0 : Integer.parseInt(v.getName().split(" ")[1]) % 2 != 0;
+            if (!canMove) {
+                // Убираем автомобиль с дороги (не учитываем его выбросы)
+                System.out.println(v.getName() + " cannot move today.");
+            }
+        }
     }
 }
