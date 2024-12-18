@@ -4,6 +4,7 @@ public class Enterprise extends PollutionSource {
     private double allowedEmissions; // Допустимые выбросы
     private double currentEmissions; // Текущие выбросы
     private double taxPayments;      // Налоговые отчисления
+    private int fine;
 
     public Enterprise(String name, int x, int y, double allowedEmissions, double taxPayments) {
         super(name, x, y);
@@ -35,5 +36,11 @@ public class Enterprise extends PollutionSource {
 
     public double getCurrentEmissions() {
         return currentEmissions;
+    }
+    public int getFine() {
+        return fine;
+    }
+    public void setFine(int a) {
+        this.fine=a;
     }
 }

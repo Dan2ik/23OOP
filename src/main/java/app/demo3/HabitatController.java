@@ -70,6 +70,7 @@ public class HabitatController {
     private List<Vehicle> vehicles;
     private int simulationDays;
     private double cityFund;
+    private CityDepartment cityDepartment;
     private boolean isRaining;
     private boolean isWindy;
     private Random random = new Random();
@@ -109,13 +110,22 @@ public class HabitatController {
 
     @FXML
     protected void onHelloButtonClick() {
+        this.cityDepartment = new CityDepartment(Double.parseDouble(fundField.getText()));
         // Чтение данных из интерфейса
         int numEnterprises = Integer.parseInt(numEnterprisesField.getText());
-        int numCars = Integer.parseInt(numCarsField.getText()) * 1000; // Конвертируем в тысячи
+        int numCars = Integer.parseInt(numCarsField.getText()) ;
         cityFund = Double.parseDouble(fundField.getText());
         simulationDays = Integer.parseInt(stepField.getText());
         isRaining = rainCheckBox.isSelected();
         isWindy = windCheckBox.isSelected();
+        // Регулирование движения транспорта
+        cityDepartment.regulateVehicleTraffic(0.2); // Пример: уменьшение на 20%
+
+        // Применение штрафов
+        cityDepartment.applyFines();
+
+        // Субсидии для фильтров
+        cityDepartment.subsidizeFilters();
 
         // Генерация предприятий и автомобилей
         generateEnterprises(numEnterprises);
@@ -153,11 +163,16 @@ public class HabitatController {
             // Отображение предприятия
             Circle enterpriseCircle = new Circle(x, y, 8, Color.BLACK);
             cityMapPane.getChildren().add(enterpriseCircle);
+            cityDepartment.addPollutionSource(enterprise);
         }
     }
     private void updatePollutionCircles() {
         // Удаляем старые круги загрязнения
-        cityMapPane.getChildren().removeIf(node -> node instanceof Circle && ((Circle) node).getFill() instanceof Color && ((Color) ((Circle) node).getFill()).getRed() > 0.8);
+        cityMapPane.getChildren().removeIf(node ->
+                node instanceof Circle &&
+                        ((Circle) node).getFill() instanceof Color &&
+                        ((Color) ((Circle) node).getFill()).getRed() > 0.8
+        );
 
         // Добавляем новые круги для каждого предприятия
         for (Enterprise enterprise : enterprises) {
@@ -169,14 +184,48 @@ public class HabitatController {
             pollutionCircle.setEffect(new GaussianBlur(20));
             cityMapPane.getChildren().add(pollutionCircle);
         }
+
+        // Добавляем новые круги для каждого автомобиля
+        for (Vehicle vehicle : vehicles) {
+            double currentEmissions = vehicle.calculateEmissions();
+            double radius = Math.min(50, currentEmissions * 20); // Радиус меньше, чем у предприятий
+            double opacity = Math.min(0.3, currentEmissions / 2); // Прозрачность ниже
+
+            Circle pollutionCircle = new Circle(vehicle.getX(), vehicle.getY(), radius, Color.rgb(0, 0, 255, opacity)); // Синий цвет для автомобилей
+            pollutionCircle.setEffect(new GaussianBlur(15)); // Меньший эффект размытия
+            cityMapPane.getChildren().add(pollutionCircle);
+        }
     }
+
     private void generateVehicles(int count) {
-        vehicles.clear();
-        vehicleData.clear();
+        vehicles.clear();        // Очистка списка транспортных средств
+        vehicleData.clear();     // Очистка таблицы (если требуется)
+
+        Random random = new Random();
 
         for (int i = 0; i < count; i++) {
-            double emissions = 0.5 + random.nextDouble(); // Средний выхлоп автомобиля
-            vehicles.add(new Vehicle("Car " + (i + 1), 0, 0, emissions));
+            int x = random.nextInt(400) + 50;
+            int y = random.nextInt(300) + 50;
+            double emissions = 0.5 + random.nextDouble();
+
+            // Создание автомобиля
+            Vehicle vehicle = new Vehicle("Car " + (i + 1), x, y, emissions);
+            vehicles.add(vehicle);
+            vehicleData.add(vehicle);
+
+            // Круг автомобиля
+            Circle vehicleCircle = new Circle(x, y, 4, Color.BLUE);
+            cityMapPane.getChildren().add(vehicleCircle);
+
+            // Эффект загрязнения
+            double currentEmissions = vehicle.calculateEmissions(); // Начальный уровень выбросов
+            double radius = Math.min(100, currentEmissions * 50);   // Радиус загрязнения (увеличен для наглядности)
+            double opacity = Math.min(0.3, currentEmissions / 2);   // Прозрачность (увеличена для видимости)
+
+            Circle pollutionCircle = new Circle(x, y, radius, Color.rgb(255, 0, 0, opacity));
+            pollutionCircle.setEffect(new GaussianBlur(20)); // Эффект размытия// Чтобы круг не перекрывал взаимодействия
+            cityMapPane.getChildren().add(pollutionCircle);
+            cityDepartment.addPollutionSource(vehicle); // Добавление в CityDepartment
         }
     }
 

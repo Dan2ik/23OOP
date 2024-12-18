@@ -93,5 +93,6 @@ public class CityDepartment {
     public void displayStatus() {
         System.out.println("Городской бюджет: " + cityFunds);
         monitorPollution();
+        applyFines();
     }
 }
