@@ -1,9 +1,9 @@
 package app.demo3;
 
 public class Enterprise extends PollutionSource {
-    protected double allowedEmissions; // Допустимые выбросы
-    protected double currentEmissions; // Текущие выбросы
-    protected double taxPayments; // Налоговые отчисления
+    private double allowedEmissions; // Допустимые выбросы
+    private double currentEmissions; // Текущие выбросы
+    private double taxPayments;      // Налоговые отчисления
 
     public Enterprise(String name, int x, int y, double allowedEmissions, double taxPayments) {
         super(name, x, y);
@@ -14,7 +14,8 @@ public class Enterprise extends PollutionSource {
 
     @Override
     public double calculateEmissions() {
-        currentEmissions = allowedEmissions * (0.8 + Math.random() * 0.4); // 80%-120%
+        // Выбросы варьируются от 80% до 120% от допустимого предела
+        currentEmissions = allowedEmissions * (0.8 + Math.random() * 0.4);
         return currentEmissions;
     }
 
@@ -24,6 +25,15 @@ public class Enterprise extends PollutionSource {
 
     public void installFilter() {
         allowedEmissions *= 0.93; // Уменьшение нормы выбросов на 7%
-        System.out.println("На " + name + " установлен фильтр.");
+        System.out.println("На предприятии \"" + name + "\" установлен фильтр.");
+    }
+
+    // Геттеры
+    public double getAllowedEmissions() {
+        return allowedEmissions;
+    }
+
+    public double getCurrentEmissions() {
+        return currentEmissions;
     }
 }

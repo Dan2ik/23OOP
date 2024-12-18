@@ -16,7 +16,7 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TableView?>
-<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="app.demo3.HelloController">
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="app.demo3.Habitat">
     <!-- Верхняя панель для настройки параметров -->
     <top>
         <VBox spacing="10.0" alignment="CENTER">
