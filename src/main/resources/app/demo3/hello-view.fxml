@@ -58,11 +58,10 @@
                 <Tab text="Состояние предприятий">
                     <TableView fx:id="enterpriseTable">
                         <columns>
-                            <TableColumn text="Предприятие" fx:id="enterpriseNameColumn" />
-                            <TableColumn text="Выбросы (т)" fx:id="emissionsColumn" />
-                            <TableColumn text="Допустимые выбросы (т)" fx:id="limitColumn" />
-                            <TableColumn text="Штрафы (у.е.)" fx:id="penaltyColumn" />
-                            <TableColumn text="Субсидии (у.е.)" fx:id="subsidyColumn" />
+                            <TableColumn fx:id="enterpriseNameColumn" text="Название предприятия" />
+                            <TableColumn fx:id="emissionsColumn" text="Выбросы" />
+                            <TableColumn fx:id="limitColumn" text="Допустимые выбросы" />
+                            <TableColumn fx:id="penaltyColumn" text="Штраф" />
                         </columns>
                     </TableView>
                 </Tab>
