@@ -1,15 +1,23 @@
 package app.demo3;
 
 import com.almasb.fxgl.entity.action.Action;
+import javafx.animation.PauseTransition;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.effect.GaussianBlur;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,6 +82,10 @@ public class HabitatController {
     private boolean isRaining;
     private boolean isWindy;
     private Random random = new Random();
+    private Window ownerStage;
+    private int numCars;
+    @FXML
+    private int currentDay = 1;  // Текущий день симуляции
 
     @FXML
     protected void initialize() {
@@ -107,65 +119,105 @@ public class HabitatController {
         actionTypeColumn.setCellValueFactory(new PropertyValueFactory<>("type"));
         actionDescriptionColumn.setCellValueFactory(new PropertyValueFactory<>("description"));
     }
-
-    @FXML
-    protected void onHelloButtonClick() {
+    public void NextDayClick(ActionEvent actionEvent) {
         this.cityDepartment = new CityDepartment(Double.parseDouble(fundField.getText()));
+
         // Чтение данных из интерфейса
         int numEnterprises = Integer.parseInt(numEnterprisesField.getText());
-        int numCars = Integer.parseInt(numCarsField.getText()) ;
+        numCars = Integer.parseInt(numCarsField.getText());
         cityFund = Double.parseDouble(fundField.getText());
         simulationDays = Integer.parseInt(stepField.getText());
         isRaining = rainCheckBox.isSelected();
         isWindy = windCheckBox.isSelected();
-        // Регулирование движения транспорта
-        cityDepartment.regulateVehicleTraffic(0.2); // Пример: уменьшение на 20%
 
-        // Применение штрафов
-        cityDepartment.applyFines();
+        // Создание окна загрузки
+        Stage loadingStage = new Stage();
+        loadingStage.initOwner(ownerStage);
+        loadingStage.initModality(Modality.WINDOW_MODAL);
+        loadingStage.setTitle("Loading...");
 
-        // Субсидии для фильтров
-        cityDepartment.subsidizeFilters();
+        Label messageLabel = new Label("Строятся заводы, запускаются машины");
+        ProgressIndicator progressIndicator = new ProgressIndicator();
 
-        // Генерация предприятий и автомобилей
-        generateEnterprises(numEnterprises);
-        generateVehicles(numCars);
+        VBox vbox = new VBox(10, progressIndicator, messageLabel);
+        vbox.setAlignment(Pos.CENTER);
 
-        // Запуск моделирования
-        runSimulation();
+        Scene scene = new Scene(vbox, 300, 150);
+        loadingStage.setScene(scene);
+        loadingStage.setResizable(false);
+
+        // Показываем окно загрузки
+        loadingStage.show();
+
+        // Используем PauseTransition для задержки на 5 секунд
+        PauseTransition delay = new PauseTransition(javafx.util.Duration.seconds(5));
+        delay.setOnFinished(event -> {
+            try {
+                // Выполнение операций
+                NDay();
+                updatePollutionCircles();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                // Закрытие окна загрузки
+                loadingStage.close();
+            }
+        });
+
+        delay.play();
+    }
+    @FXML
+    protected void onHelloButtonClick() {
+        this.cityDepartment = new CityDepartment(Double.parseDouble(fundField.getText()));
+
+        // Чтение данных из интерфейса
+        int numEnterprises = Integer.parseInt(numEnterprisesField.getText());
+        int numCars = Integer.parseInt(numCarsField.getText());
+        cityFund = Double.parseDouble(fundField.getText());
+        simulationDays = Integer.parseInt(stepField.getText());
+        isRaining = rainCheckBox.isSelected();
+        isWindy = windCheckBox.isSelected();
+
+        // Создание окна загрузки
+        Stage loadingStage = new Stage();
+        loadingStage.initOwner(ownerStage);
+        loadingStage.initModality(Modality.WINDOW_MODAL);
+        loadingStage.setTitle("Loading...");
+
+        Label messageLabel = new Label("Строятся заводы, запускаются машины");
+        ProgressIndicator progressIndicator = new ProgressIndicator();
+
+        VBox vbox = new VBox(10, progressIndicator, messageLabel);
+        vbox.setAlignment(Pos.CENTER);
+
+        Scene scene = new Scene(vbox, 300, 150);
+        loadingStage.setScene(scene);
+        loadingStage.setResizable(false);
+
+        // Показываем окно загрузки
+        loadingStage.show();
+
+        // Используем PauseTransition для задержки на 5 секунд
+        PauseTransition delay = new PauseTransition(javafx.util.Duration.seconds(5));
+        delay.setOnFinished(event -> {
+            try {
+                // Выполнение операций
+                generateEnterprises(numEnterprises);
+                generateVehicles(numCars);
+                runSimulation();
+                updatePollutionCircles();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                // Закрытие окна загрузки
+                loadingStage.close();
+            }
+        });
+
+        delay.play();
     }
 
-    private void generateEnterprises(int count) {
-        cityMapPane.getChildren().clear(); // Очистка карты
-        enterprises.clear();
-        enterpriseData.clear();
 
-        for (int i = 0; i < count; i++) {
-            int x = random.nextInt(400) + 50; // Координаты предприятий
-            int y = random.nextInt(300) + 50;
-            double allowedEmissions = 50 + random.nextDouble() * 100;
-            double tax = 500 + random.nextDouble() * 1000;
-
-            // Генерируем предприятие
-            Enterprise enterprise = new Enterprise("Завод " + (i + 1), x, y, allowedEmissions, tax);
-            enterprises.add(enterprise);
-            enterpriseData.add(enterprise);
-
-            // Отображение размытых кругов
-            double currentEmissions = enterprise.calculateEmissions(); // Начальный уровень выбросов
-            double radius = Math.min(100, currentEmissions * 2); // Радиус размытых кругов (максимум 100)
-            double opacity = Math.min(0.5, currentEmissions / 200); // Прозрачность (максимум 0.5)
-
-            Circle pollutionCircle = new Circle(x, y, radius, Color.rgb(255, 0, 0, opacity));
-            pollutionCircle.setEffect(new GaussianBlur(20)); // Эффект размытия
-            cityMapPane.getChildren().add(pollutionCircle);
-
-            // Отображение предприятия
-            Circle enterpriseCircle = new Circle(x, y, 8, Color.BLACK);
-            cityMapPane.getChildren().add(enterpriseCircle);
-            cityDepartment.addPollutionSource(enterprise);
-        }
-    }
     private void updatePollutionCircles() {
         // Удаляем старые круги загрязнения
         cityMapPane.getChildren().removeIf(node ->
@@ -188,25 +240,74 @@ public class HabitatController {
         // Добавляем новые круги для каждого автомобиля
         for (Vehicle vehicle : vehicles) {
             double currentEmissions = vehicle.calculateEmissions();
-            double radius = Math.min(50, currentEmissions * 20); // Радиус меньше, чем у предприятий
-            double opacity = Math.min(0.3, currentEmissions / 2); // Прозрачность ниже
+            double radius = currentEmissions / 10; // Радиус меньше, чем у предприятий
+            double opacity = currentEmissions / 300; // Прозрачность ниже
 
             Circle pollutionCircle = new Circle(vehicle.getX(), vehicle.getY(), radius, Color.rgb(0, 0, 255, opacity)); // Синий цвет для автомобилей
             pollutionCircle.setEffect(new GaussianBlur(15)); // Меньший эффект размытия
             cityMapPane.getChildren().add(pollutionCircle);
         }
     }
+    private void generateEnterprises(int count) {
+        cityMapPane.getChildren().clear(); // Очистка карты
+        enterprises.clear();
+        enterpriseData.clear();
 
-    private void generateVehicles(int count) {
+        for (int i = 0; i < count; i++) {
+            int x = random.nextInt(400) + 50; // Координаты предприятий
+            int y = random.nextInt(300) + 50;
+            double allowedEmissions = 50 + random.nextDouble() * 100;
+            double tax = 500 + random.nextDouble() * 1000;
+
+            // Генерируем предприятие
+            Enterprise enterprise = new Enterprise("Завод " + (i + 1), x, y, allowedEmissions, tax);
+            enterprises.add(enterprise);
+            enterpriseData.add(enterprise);
+
+            // Отображение размытых кругов
+            double currentEmissions = enterprise.calculateEmissions(); // Начальный уровень выбросов
+            double radius = Math.min(100, currentEmissions * 2); // Радиус размытых кругов (максимум 100)
+            double opacity= currentEmissions / 200; // Прозрачность (максимум 0.5)
+
+            Circle pollutionCircle = new Circle(x, y, radius, Color.rgb(255, 0, 0, opacity));
+            pollutionCircle.setEffect(new GaussianBlur(20)); // Эффект размытия
+            cityMapPane.getChildren().add(pollutionCircle);
+
+            // Отображение предприятия
+            Circle enterpriseCircle = new Circle(x, y, 8, Color.BLACK);
+            cityMapPane.getChildren().add(enterpriseCircle);
+            cityDepartment.addPollutionSource(enterprise);
+        }
+    }
+    protected void NDay() {
+        // Увеличиваем текущий день
+        currentDay++;
+
+        // Обновляем выбросы для существующих предприятий
+        for (Enterprise enterprise : enterprises) {
+            // Пересчитываем выбросы
+            double updatedEmissions = enterprise.calculateEmissions() * (1 + (random.nextDouble() - 0.5) * 0.1); // Колебания ±5%
+            enterprise.setCurrentEmissions(updatedEmissions);
+
+            // Применяем штраф, если выбросы превышают допустимые
+            if (updatedEmissions > enterprise.getAllowedEmissions()) {
+                double fine = (updatedEmissions - enterprise.getAllowedEmissions()) * 0.1;
+                cityFund += fine;
+                enterprise.setFine((int) fine);
+            } else {
+                enterprise.setFine(0); // Обнуляем штраф, если выбросы в норме
+            }
+        }
+
         vehicles.clear();        // Очистка списка транспортных средств
         vehicleData.clear();     // Очистка таблицы (если требуется)
 
         Random random = new Random();
-
-        for (int i = 0; i < count; i++) {
+        cityDepartment.setNumberOfVehicles(numCars);
+        for (int i = 0; i < numCars; i++) {
             int x = random.nextInt(400) + 50;
             int y = random.nextInt(300) + 50;
-            double emissions = 0.5 + random.nextDouble();
+            double emissions = 50 + random.nextDouble() * 100;
 
             // Создание автомобиля
             Vehicle vehicle = new Vehicle("Car " + (i + 1), x, y, emissions);
@@ -219,13 +320,51 @@ public class HabitatController {
 
             // Эффект загрязнения
             double currentEmissions = vehicle.calculateEmissions(); // Начальный уровень выбросов
-            double radius = Math.min(100, currentEmissions * 50);   // Радиус загрязнения (увеличен для наглядности)
-            double opacity = Math.min(0.3, currentEmissions / 2);   // Прозрачность (увеличена для видимости)
+            double radius = Math.min(10, currentEmissions * 5);   // Радиус загрязнения (увеличен для наглядности)
+            double opacity = Math.min(0.01, currentEmissions / 100);   // Прозрачность (увеличена для видимости)
 
             Circle pollutionCircle = new Circle(x, y, radius, Color.rgb(255, 0, 0, opacity));
-            pollutionCircle.setEffect(new GaussianBlur(20)); // Эффект размытия// Чтобы круг не перекрывал взаимодействия
+            pollutionCircle.setEffect(new GaussianBlur(100)); // Эффект размытия// Чтобы круг не перекрывал взаимодействия
             cityMapPane.getChildren().add(pollutionCircle);
             cityDepartment.addPollutionSource(vehicle); // Добавление в CityDepartment
+            vehicle.setAllowedCars(random.nextInt(100)); // Пример установки данных
+
+        }
+
+        // Обновляем круги загрязнения
+        updatePollutionCircles();
+    }
+    private void generateVehicles(int count) {
+        vehicles.clear();        // Очистка списка транспортных средств
+        vehicleData.clear();     // Очистка таблицы (если требуется)
+
+        Random random = new Random();
+        cityDepartment.setNumberOfVehicles(count);
+        for (int i = 0; i < count; i++) {
+            int x = random.nextInt(400) + 50;
+            int y = random.nextInt(300) + 50;
+            double emissions = 50 + random.nextDouble() * 100;
+
+            // Создание автомобиля
+            Vehicle vehicle = new Vehicle("Car " + (i + 1), x, y, emissions);
+            vehicles.add(vehicle);
+            vehicleData.add(vehicle);
+
+            // Круг автомобиля
+            Circle vehicleCircle = new Circle(x, y, 4, Color.BLUE);
+            cityMapPane.getChildren().add(vehicleCircle);
+
+            // Эффект загрязнения
+            double currentEmissions = vehicle.calculateEmissions(); // Начальный уровень выбросов
+            double radius = Math.min(10, currentEmissions * 5);   // Радиус загрязнения (увеличен для наглядности)
+            double opacity = Math.min(0.01, currentEmissions / 100);   // Прозрачность (увеличена для видимости)
+
+            Circle pollutionCircle = new Circle(x, y, radius, Color.rgb(255, 0, 0, opacity));
+            pollutionCircle.setEffect(new GaussianBlur(100)); // Эффект размытия// Чтобы круг не перекрывал взаимодействия
+            cityMapPane.getChildren().add(pollutionCircle);
+            cityDepartment.addPollutionSource(vehicle); // Добавление в CityDepartment
+            vehicle.setAllowedCars(random.nextInt(100)); // Пример установки данных
+
         }
     }
 
@@ -263,4 +402,6 @@ public class HabitatController {
             }
         }
     }
+
+
 }

@@ -11,12 +11,16 @@ public class Enterprise extends PollutionSource {
         this.allowedEmissions = allowedEmissions;
         this.taxPayments = taxPayments;
         this.currentEmissions = 0;
+
     }
 
     @Override
     public double calculateEmissions() {
         // Выбросы варьируются от 80% до 120% от допустимого предела
         currentEmissions = allowedEmissions * (0.8 + Math.random() * 0.4);
+        if (allowedEmissions<currentEmissions){
+            this.fine=50000;
+        }
         return currentEmissions;
     }
 
@@ -42,5 +46,9 @@ public class Enterprise extends PollutionSource {
     }
     public void setFine(int a) {
         this.fine=a;
+    }
+
+    public void setCurrentEmissions(double updatedEmissions) {
+        this.currentEmissions=updatedEmissions;
     }
 }

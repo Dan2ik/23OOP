@@ -37,8 +37,8 @@ public class Vehicle extends PollutionSource {
     public void setDay(int day) {
         this.day = day;
     }
-    // Геттер для выбросов
-    public double getEmissions() {
-        return emissions;
+
+    public void setCurrentEmissions(double updatedEmissions) {
+        this.emissions=updatedEmissions;
     }
 }
