@@ -7,6 +7,7 @@ public class CityDepartment {
     private List<PollutionSource> pollutionSources;
     private List<Vehicle> vehicles;  // Список объектов типа Vehicle
     private double cityFunds; // Городской бюджет
+    private double totalEmissionsForDay;
 
     public CityDepartment(double initialFunds) {
         this.pollutionSources = new ArrayList<>();
@@ -95,5 +96,9 @@ public class CityDepartment {
         System.out.println("Городской бюджет: " + cityFunds);
         monitorPollution();
         applyFines();
+    }
+
+    public void setTotalEmissionsForDay(double totalEmissionsForDay) {
+        this.totalEmissionsForDay = totalEmissionsForDay;
     }
 }
