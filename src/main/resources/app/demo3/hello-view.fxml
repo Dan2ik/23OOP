@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
 
 <BorderPane xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.demo3.HabitatController">
     <!-- Верхняя панель для настройки параметров -->
@@ -27,7 +28,13 @@
                 <Label text="Шаг моделирования (дней):" />
                 <TextField fx:id="stepField" promptText="Введите значение..." />
             </HBox>
-         <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+         <HBox prefHeight="64.0" prefWidth="882.0" spacing="10.0">
+            <children>
+               <Text fx:id="Day" strokeType="OUTSIDE" strokeWidth="0.0" text="День: 0" />
+               <Text fx:id="AllPolution" strokeType="OUTSIDE" strokeWidth="0.0" text="Общее количество выбрасов за день: 0" />
+            </children>
+         </HBox>
+         <HBox alignment="CENTER" prefHeight="0.0" prefWidth="882.0">
             <children>
                <Button fx:id="NextDay" mnemonicParsing="false" onAction="#NextDayClick" text="Следующий день " />
       
@@ -39,7 +46,7 @@
 
     <!-- Центральная часть: карта города и информация о состоянии -->
     <center>
-        <SplitPane dividerPositions="0.5" orientation="VERTICAL">
+        <SplitPane dividerPositions="0.5564625850340136" orientation="VERTICAL">
             <!-- Карта города -->
             <AnchorPane fx:id="cityMapPane" prefHeight="300.0" style="-fx-border-color: black;">
                 <Label layoutX="10.0" layoutY="10.0" text="Карта города" />

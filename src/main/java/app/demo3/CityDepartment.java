@@ -62,12 +62,7 @@ public class CityDepartment {
         }
     }
 
-    public void regulateVehicleTraffic(double percentageReduction) {
-        int reducedVehicles = (int) (getNumberOfVehicles() * (1 - percentageReduction));
-        setNumberOfVehicles(reducedVehicles);
-        System.out.println("Ограничено движение для " + (getNumberOfVehicles()));
-        System.out.println("Ограничено движение для " + (getNumberOfVehicles() - reducedVehicles) + " транспортных средств.");
-    }
+
 
     public double getCityFunds() {
         return cityFunds;

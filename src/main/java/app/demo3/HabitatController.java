@@ -15,6 +15,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.effect.GaussianBlur;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -69,7 +70,10 @@ public class HabitatController {
     private TableColumn<Action, String> actionTypeColumn;
     @FXML
     private TableColumn<Action, String> actionDescriptionColumn;
-
+    @FXML
+    private Text Day;
+    @FXML
+    private Text AllPolution;
     private ObservableList<Enterprise> enterpriseData;
     private ObservableList<Vehicle> vehicleData;
     private ObservableList<ConcreteAction> actionData;
@@ -85,6 +89,7 @@ public class HabitatController {
     private Random random = new Random();
     private Window ownerStage;
     private int numCars;
+    private double ALLP=0;
     @FXML
     private int currentDay = 0;  // Текущий день симуляции
 
@@ -131,8 +136,8 @@ public class HabitatController {
         );
     }
     public void NextDayClick(ActionEvent actionEvent) {
+        ALLP=0;
         this.cityDepartment = new CityDepartment(Double.parseDouble(fundField.getText()));
-
         // Чтение данных из интерфейса
         int numEnterprises = Integer.parseInt(numEnterprisesField.getText());
         numCars = Integer.parseInt(numCarsField.getText());
@@ -140,7 +145,7 @@ public class HabitatController {
         simulationDays = Integer.parseInt(stepField.getText());
         isRaining = rainCheckBox.isSelected();
         isWindy = windCheckBox.isSelected();
-
+        if (currentDay<simulationDays){
         // Создание окна загрузки
         Stage loadingStage = new Stage();
         loadingStage.initOwner(ownerStage);
@@ -165,6 +170,7 @@ public class HabitatController {
             try {
                  NDay();
                 updatePollutionCircles();
+                AllPolution.setText("Общее количество выбросов за день: " + String.format("%.2f", ALLP));
             } catch (Exception e) {
                 e.printStackTrace();
             } finally {
@@ -175,10 +181,20 @@ public class HabitatController {
 
         delay.play();
     }
+        else{
+            // Создание диалогового окна с сообщением
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Симуляция завершена");
+            alert.setHeaderText(null);
+            alert.setContentText("Дни симуляции закончились. Перезапустите симуляцию.");
+            alert.showAndWait();
+        }
+    }
+
     @FXML
     protected void onHelloButtonClick() {
+        currentDay=0;
         this.cityDepartment = new CityDepartment(Double.parseDouble(fundField.getText()));
-
         // Чтение данных из интерфейса
         int numEnterprises = Integer.parseInt(numEnterprisesField.getText());
         int numCars = Integer.parseInt(numCarsField.getText());
@@ -234,7 +250,6 @@ public class HabitatController {
                         ((Circle) node).getFill() instanceof Color &&
                         ((Color) ((Circle) node).getFill()).getRed() > 0.8
         );
-
         // Добавляем новые круги для каждого предприятия
         for (Enterprise enterprise : enterprises) {
             double currentEmissions = enterprise.calculateEmissions();
@@ -292,66 +307,83 @@ public class HabitatController {
         // Очистка карты от машин
         clearVehiclesFromMap();
         currentDay++;
-
+        Day.setText("День: "+ currentDay);
 // Обновляем выбросы для предприятий и добавляем их в список
         for (Enterprise enterprise : new ArrayList<>(enterprises)) {
-            enterprise.setCurrentEmissions(enterprise.getCurrentEmissions() * (1 + (random.nextDouble() - 0.5) * 0.1));
 
-            double updatedEmissions = enterprise.calculateEmissions() * (1 + (random.nextDouble() - 0.5) * 0.1);
+            double updatedEmissions = (100-7*enterprise.getFilter())*(1 + (random.nextDouble() - 0.5) * 0.1);
             enterprise.setCurrentEmissions(updatedEmissions);
-
+            ALLP+=updatedEmissions;
+            System.out.println(updatedEmissions);
             // Применяем штраф
-            if (updatedEmissions > enterprise.getAllowedEmissions()) {
-                double fine = (updatedEmissions - enterprise.getAllowedEmissions()) * 0.1;
-                cityFund += fine;
-                enterprise.setFine((int) fine);
+            double fineAmount = (enterprise.getCurrentEmissions() - enterprise.getAllowedEmissions()) * 0.1;
+            if (enterprise.getAllowedEmissions()<=enterprise.getCurrentEmissions()) {
+                cityFund += fineAmount;
+                enterprise.setFine(50000);
+                enterprise.installFilter();//уменьшаем выбрасы на 7 процентов
+                System.out.println("Штраф для " + enterprise.getName() + ": " + 50000);
+                actionData.add(new ConcreteAction(String.valueOf(currentDay),enterprise.getName(), "штраф 50000"));
+
             } else {
                 enterprise.setFine(0);
             }
 
-            // Добавляем в ObservableList для отображения в таблице
-            enterpriseData.add(enterprise);  // Добавление в таблицу
+            enterpriseData.set(1, enterprise);
+            // Обновляем таблицу
         }
         // Очищаем список машин
         vehicles.clear();
         Random random = new Random();
         cityDepartment.setNumberOfVehicles(numCars);
         double totalEmissionsForDay = 0; // Суммарные выбросы за день
+        boolean t=false;
+        int i1=0;
+        double randomFactor = 0.9 + (1.1 - 0.9) * random.nextDouble(); // Рандомный коэффициент в диапазоне [0.9, 1.1]
         // Создание машин и подсчёт выбросов
         for (int i = 0; i < numCars; i++) {
-            int x = random.nextInt(400) + 50;
-            int y = random.nextInt(300) + 50;
-            double emissions = 50 + random.nextDouble() * 100;
 
-            Vehicle vehicle = new Vehicle("Car " + (i + 1), x, y, emissions);
-            vehicle.setDay(currentDay);
-            vehicles.add(vehicle);
-            vehicleData.add(vehicle);
 
-            totalEmissionsForDay += vehicle.calculateEmissions(); // Суммируем выбросы за день
 
-            // Создание круга машины
-            Circle vehicleCircle = new Circle(x, y, 4, Color.BLUE);
-            cityMapPane.getChildren().add(vehicleCircle);
+// Условие с рандомизацией
+            if (ALLP / (Integer.parseInt(numEnterprisesField.getText()) + Integer.parseInt(numCarsField.getText())) > 100 * randomFactor) {
+                i1++;
+                System.out.println(i1);
 
-            // Эффект загрязнения
-            double radius = Math.min(10, emissions * 5); // Радиус загрязнения
-            double opacity = Math.min(0.01, emissions / 100); // Прозрачность
+            }
+            else {
+                int x = random.nextInt(700) + 50;
+                int y = random.nextInt(400) + 50;
+                double emissions = 10 + random.nextDouble() * 10;
+                ALLP+=emissions;
+                Vehicle vehicle = new Vehicle("Car " + (i + 1), x, y, emissions);
+                vehicle.setDay(currentDay);
+                vehicles.add(vehicle);
+                vehicleData.add(vehicle);
+                totalEmissionsForDay += vehicle.calculateEmissions(); // Суммируем выбросы за день
 
-            Circle pollutionCircle = new Circle(x, y, radius, Color.rgb(255, 0, 0, opacity));
-            pollutionCircle.setEffect(new GaussianBlur(100)); // Эффект размытия
-            cityMapPane.getChildren().add(pollutionCircle);
+                // Создание круга машины
+                Circle vehicleCircle = new Circle(x, y, 4, Color.BLUE);
+                cityMapPane.getChildren().add(vehicleCircle);
 
-            cityDepartment.addPollutionSource(vehicle); // Добавление в CityDepartment
-            vehicle.setAllowedCars(random.nextInt(100)); // Пример установки данных
+                // Эффект загрязнения
+                double radius = Math.min(10, emissions * 5); // Радиус загрязнения
+                double opacity = Math.min(0.01, emissions / 100); // Прозрачность
+
+                Circle pollutionCircle = new Circle(x, y, radius, Color.rgb(255, 0, 0, opacity));
+                pollutionCircle.setEffect(new GaussianBlur(100)); // Эффект размытия
+                cityMapPane.getChildren().add(pollutionCircle);
+
+                cityDepartment.addPollutionSource(vehicle); // Добавление в CityDepartment
+            }
         }
 
+        actionData.add(new ConcreteAction(String.valueOf(currentDay), "ограничение","ограничено движение "+i1+"автомобилям" ));
         // Сохранение данных о количестве машин и выбросах за день
-        cityDepartment.setNumberOfVehicles(numCars);
+        cityDepartment.setNumberOfVehicles(numCars-i1);
         cityDepartment.setTotalEmissionsForDay(totalEmissionsForDay);
 
         // Добавляем данные в таблицу
-        carSummaries.add(new DaySummary(currentDay, numCars, totalEmissionsForDay));
+        carSummaries.add(new DaySummary(currentDay, numCars-i1, totalEmissionsForDay));
 
         // Обновляем круги загрязнения
         updatePollutionCircles();
